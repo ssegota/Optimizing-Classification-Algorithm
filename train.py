@@ -8,8 +8,8 @@ from gene_cross import *
 from sklearn import metrics
 import math
 
-POPULATION_SIZE = 100
-
+POPULATION_SIZE = 10
+ITERATIONS = 10
 path = r"Data/JDT_R2_0.csv"
 data = pd.read_csv(path, index_col = None, header = 0)
 """
@@ -34,7 +34,7 @@ for i in range(POPULATION_SIZE):
 
 fit = []
 
-for n in range(100):
+for n in range(ITERATIONS):
     print("------------------\nITERATION =", n, "\n------------------\n")
     l=0
     for i in range(POPULATION_SIZE):
@@ -67,8 +67,7 @@ for n in range(100):
         #generate new genes by crossing and mutating genes
         gene1=population[random.randint(len(population))]
         gene2 = population[random.randint(len(population))]
-        #newGene = Gene([0], '.', '.', 0.0, 0)
-        #newGene.setRandom()
+
         newGene = crossGenes(gene1,gene2)
 
         population.append(newGene)

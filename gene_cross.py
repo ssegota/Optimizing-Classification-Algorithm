@@ -102,7 +102,7 @@ def crossLayers(list1, list2, length = 0):
     return ret_list
 
 def mutator(gene):
-    choice = random.randint(6)
+    choice = random.randint(5)
     if choice == 0:
         #modify length
         oldLen = len(gene.hiddenLayerSizes)
@@ -116,13 +116,11 @@ def mutator(gene):
                 gene.hiddenLayerSizes.pop()
     if choice == 1:
         gene.activationFunction=activationFunctionList[random.randint(4)]
-    #if choice == 2:
-    #    gene.solver = solverList[random.randint(3)]
-    if choice == 3:
+    if choice == 2:
         gene.alpha = random.uniform(0,1)
-    if choice == 4:
+    if choice == 3:
         gene.n_iter = random.randint(100,MAX_NUMBER_OF_ITERATIONS)
-    if choice == 5:
+    if choice == 4:
         #modify hiddenLayerSizes
         for i in range(len(gene.hiddenLayerSizes)):
             gene.hiddenLayerSizes[i] = random.randint(1,MAX_NEURONS_PER_LAYER)
@@ -138,15 +136,9 @@ def crossGenes(gene1, gene2):
     new_n_iter = int((gene1.n_iter+gene2.n_iter)/2)
     
     ret_gene = Gene(new_hiddenLayerSizes, new_activationFunction[0], new_solver, new_alpha, new_n_iter)
-    #somehow sometimes there's a 0 in hidden layer sizes
-    #this is quick and dirty fix to debug other stuff
-    #TODO fix this
-    for k in range(new_nHiddenLayers):
-        if new_hiddenLayerSizes[k]==0:
-            new_hiddenLayerSizes[k] = 1
 
-    #if random.randint(MUTATION_CHANCE) == 0:
-    #    mutator(ret_gene)
+    if random.randint(MUTATION_CHANCE) == 0:
+        mutator(ret_gene)
     return ret_gene
 
 
