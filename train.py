@@ -9,7 +9,7 @@ from sklearn import metrics
 import math
 
 POPULATION_SIZE = 10
-ITERATIONS = 10
+ITERATIONS = 25
 path = r"Data/JDT_R2_0.csv"
 data = pd.read_csv(path, index_col = None, header = 0)
 """
