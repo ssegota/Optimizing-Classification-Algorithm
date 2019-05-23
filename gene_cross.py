@@ -1,8 +1,8 @@
 from numpy import random
 
 
-MAX_HIDDEN_LAYERS = 10
-MAX_NEURONS_PER_LAYER = 20
+MAX_HIDDEN_LAYERS = 20
+MAX_NEURONS_PER_LAYER = 25
 MAX_NUMBER_OF_ITERATIONS = 20000
 MUTATION_CHANCE = 100#Higher number, lower chance, 100 = 1%
 
@@ -23,7 +23,8 @@ class Gene:
     solver = ""
     alpha = 0.0
     n_iter = 0
-    fitness = 0.0
+    #         rmse, f1, r2
+    fitness = [0.0, 0.0, 0.0]
     
     def __init__(self, hiddenLayerSizes, activationFunction, solver, alpha, n_iter):
         self.hiddenLayerSizes = hiddenLayerSizes
