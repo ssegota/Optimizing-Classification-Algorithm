@@ -8,10 +8,14 @@ from gene_cross import *
 from sklearn import metrics
 import math
 
+def rouletteWheelSelection(population):
+    max = sum([agent.fitness for agent in population])
+    probs = [agent.fitness/max for agent in population]
+    return population[random.choice(len(population), p=probs)]
 
-
-POPULATION_SIZE = 20
-ITERATIONS = 20
+ 
+POPULATION_SIZE = 100
+ITERATIONS = 200
 path = r"Data/JDT_R2_0.csv"
 data = pd.read_csv(path, index_col = None, header = 0)
 """
@@ -25,6 +29,12 @@ data = pd.concat((pd.read_csv(d, index_col=None, header=0)
 X = data.loc[:, "SLOC_P":"MOD"]
 y = data['bug_cnt']
 
+
+binarize(y)
+#print("Values of bug count:")
+#print(y)
+
+
 X_train, X_test, y_train, y_test = train_test_split(X, y)
 population = []
 
@@ -35,19 +45,19 @@ for i in range(POPULATION_SIZE):
     population.append(g1)
 
 fit = []
-fit_rmse = []
+fit_accuracy = []
 fit_f1 = []
-fit_r2 = []
+fit_auc = []
 
 for n in range(ITERATIONS):
-    print("------------------\nITERATION =", n, "\n------------------\n")
+    print("------------------\nITERATION =", n+1,"/",ITERATIONS, "\n------------------\n")
     l=0
     for i in range(POPULATION_SIZE):
         l+=1
-        print((l/POPULATION_SIZE)*100,"%")
+        print((int(((l-1)/POPULATION_SIZE)*100)),"%", end="\r")
         #if fitnes has already been calculated skip that agent
-        #if population[i].fitness[0]!=0 and n>0:
-        #    continue
+        if population[i].f1!=0.0  and population[i].auc!=0.0 and population[i].accuracy != 0.0 and n>0:
+            continue
 
 
         mlp = MLPClassifier(hidden_layer_sizes=population[i].hiddenLayerSizes, max_iter=population[i].n_iter,
@@ -60,44 +70,91 @@ for n in range(ITERATIONS):
         #population[i].fitness = 
         
         #f1Score = metrics.f1_score(y_test, y_predicted, average='weighted')
-        population[i].fitness[0] = metrics.mean_squared_error(y_test, y_predicted)
-        population[i].fitness[1] = metrics.f1_score(y_test, y_predicted, average='weighted')
-        population[i].fitness[2] = metrics.r2_score(y_test, y_predicted)
-
-    population.sort(key=lambda x: x.fitness[0], reverse=False)
-    fit.append(population[0].fitness[0])
-    fit_rmse.append(population[0].fitness[0])
-    fit_f1.append(population[0].fitness[1])
-    fit_r2.append(population[0].fitness[2])
+         
+        
+        population[i].f1 = metrics.f1_score(y_test, y_predicted)
+        population[i].auc = metrics.accuracy_score(y_test, y_predicted)
+        population[i].accuracy = metrics.roc_auc_score(y_test, y_predicted)
+        
+        #######################################################
+        #CHANGE METRIC USED FOR FITNESS HERE
+        population[i].fitness = population[i].f1
+        ########################################################
+        print((int((l/POPULATION_SIZE)*100)), "% :", "|",
+                "F1 = ", '{0:5f}'.format(population[i].f1), "|",
+                "AUC = ", '{0:5f}'.format(population[i].auc), "|"
+                "ACCURACY = ", '{0:5f}'.format(population[i].accuracy), end="\r")
+    population.sort(key=lambda x: x.fitness, reverse=True)
+    fit.append(population[0].fitness)
+    fit_accuracy.append(population[0].accuracy)
+    fit_f1.append(population[0].f1)
+    fit_auc.append(population[0].auc)
     #delete worse half of survivors
     del population[-math.floor(len(population)/2):]
     #refill the population
     for i in range(POPULATION_SIZE-len(population)):
         #pick 2 genes at random
         #generate new genes by crossing and mutating genes
-        gene1=population[random.randint(len(population))]
-        gene2 = population[random.randint(len(population))]
+        #gene1=population[random.randint(len(population))]
+        #gene2 = population[random.randint(len(population))]
 
+        gene1 = rouletteWheelSelection(population)
+        #gene1.printAll()
+        gene2 = rouletteWheelSelection(population)
+
+        while True:
+            if gene1 == gene2:
+                gene2 = rouletteWheelSelection(population)
+                #print("\nGenes were equal selected new:")
+                #gene2.printAll()
+            else:
+                #print("\nGenes different exiting...")
+                break
+        
+        #gene2.printAll()
+
+
+        #print("\n\nGenes selected\n\n")
         newGene = crossGenes(gene1,gene2)
 
         population.append(newGene)
-        print("LEN=",len(population))
-
+        #print("LEN=",len(population))
+    print("Done. ", "|",
+          "F1 = ", '{0:5f}'.format(population[0].f1), "|",
+          "AUC = ", '{0:5f}'.format(population[0].auc), "|"
+          "ACCURACY = ", '{0:5f}'.format(population[0].accuracy), end="\r")
+    print("\n\n")
     
 import matplotlib.pyplot as plt
+import uuid
+
+filename = str(uuid.uuid4())
+
+file = open("results-"+filename+"-"+path[5:-4]+".py", 'w')
 
 #print values
 print("\n----------------\nBest Solution Found\n-----------------\n")
 population[0].printAll()
-print("Fitness:", population[0].fitness)
+
 delta = abs(fit[len(fit)-1]-fit[0])
 print("DELTA:", delta)
+#write them to file
+population[0].fprintAll(file)
 
-plt.plot(np.arange(len(fit_rmse)),fit_rmse, label='RMSE')
+file.write("DELTA = " + str(delta))
+
+plt.figure()
+plt.title("Score changes on dataset " + path[5:-4] + "\nIterations: "  \
+            + str(ITERATIONS) + " Population: " + str(POPULATION_SIZE) \
+            + " Mutation: " + '{0:1f}'.format(1/MUTATION_CHANCE*100) + "%")
 plt.plot(np.arange(len(fit_f1)), fit_f1, label='F1')
-plt.plot(np.arange(len(fit_r2)), fit_r2, label='R2')
+plt.plot(np.arange(len(fit_accuracy)), fit_accuracy, label='Accuracy')
+plt.plot(np.arange(len(fit_auc)), fit_auc, label='AUROC')
 plt.xlabel("Generation")
 plt.ylabel("Fitness")
 plt.legend(loc='upper left')
-
+plt.savefig("results-"+filename+"-"+path[5:-4]+".png")
 plt.show()
+
+file.close()
+

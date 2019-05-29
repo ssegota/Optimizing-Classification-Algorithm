@@ -23,8 +23,11 @@ class Gene:
     solver = ""
     alpha = 0.0
     n_iter = 0
-    #         rmse, f1, r2
-    fitness = [0.0, 0.0, 0.0]
+    
+    fitness = 0.0
+    f1 = 0.0
+    auc = 0.0
+    accuracy = 0.0
     
     def __init__(self, hiddenLayerSizes, activationFunction, solver, alpha, n_iter):
         self.hiddenLayerSizes = hiddenLayerSizes
@@ -35,12 +38,26 @@ class Gene:
         self.n_iter = n_iter
       
     def printAll(self):
-        print("Hidden Layer Sizes:", self.hiddenLayerSizes)
         print("Number of Hidden Layers: ", self.nHiddenLayers)
-        print("Activation Function",self.activationFunction)
+        print("hiddenLayerSizes = ", self.hiddenLayerSizes)
+        print("activation_ = \"", self.activationFunction, "\"")
         #print(self.solver)
-        print("Alpha:",self.alpha)
-        print("Max. Iterations.:",self.n_iter)
+        print("F1:", self.fitness)
+        print("AUC:", self.auc)
+        print("ACCURACY:", self.accuracy)
+
+    def fprintAll(self, f):
+        f.write("n_layers = " + str(self.nHiddenLayers) + "\n")
+        f.write("\n\n")
+        f.write("hiddenLayerSizes = " + str(self.hiddenLayerSizes) + "\n")
+        f.write("activation_ = \"" + str(self.activationFunction) + "\"" + "\n")
+        #print(self.solver)
+        f.write("alpha_ = "  + str(self.alpha) + "\n")
+        f.write("n_iter = " + str(self.n_iter) + "\n")
+        f.write("\n\n")
+        f.write("F1 = " + str(self.fitness) + "\n")
+        f.write("AUC = "  + str(self.auc) + "\n")
+        f.write("ACCURACY = " + str(self.accuracy) + "\n")
 
     def setRandom(self):
     
@@ -128,21 +145,40 @@ def mutator(gene):
 
 
 def crossGenes(gene1, gene2):
+    #print("\n\nCROSSING STARTED\n\n")
+    #gene1.printAll()
+    #gene2.printAll()
+    #print("\n\nVALUES PRINTED\n\n")
     new_hiddenLayerSizes = crossLayers(gene1.hiddenLayerSizes, gene2.hiddenLayerSizes)
     new_nHiddenLayers = len(new_hiddenLayerSizes)
     new_activationFunction = random.choice([gene1.activationFunction, gene2.activationFunction], 1, p=[0.5,0.5])
-    print(new_activationFunction)
+    #print(new_activationFunction)
     new_solver = "adam"
-    new_alpha = (gene1.alpha+gene2.alpha)/2.0
-    new_n_iter = int((gene1.n_iter+gene2.n_iter)/2)
-    
+    #new_alpha = (gene1.alpha+gene2.alpha)/2.0
+    #new_n_iter = int((gene1.n_iter+gene2.n_iter)/2)
+    new_alpha = random.choice([gene1.alpha, gene2.alpha])
+    new_n_iter = random.choice([gene1.n_iter, gene2.n_iter])
     ret_gene = Gene(new_hiddenLayerSizes, new_activationFunction[0], new_solver, new_alpha, new_n_iter)
 
     if random.randint(MUTATION_CHANCE) == 0:
+        #print("MUTATION")
         mutator(ret_gene)
     return ret_gene
 
 
+#turns the number of errors above threshold into 1 and below into 0
+def binarize(y, threshold=1):
+    l_y = len(y)
+    for i in range(l_y):
+        #print("\033[K", end='')
+        print("Binarizing:", int((i/l_y)*100), "%", end="\r")
+        #print("Before: ", y[i])
+        if y[i] > threshold:
+            y[i] = 1
+        else:
+            y[i] = 0
+        #print("After: ", y[i])
+    print("Binarizing done.")
 
 """
 gene1 = Gene([10,10,20,34],activationFunctionList[0], solverList[0], 0.4, 2000)
