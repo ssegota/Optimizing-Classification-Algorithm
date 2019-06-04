@@ -41,7 +41,7 @@ def fprintValues(f1, auc, acc, title, dataFileName,validateFileName, f):
     f.write("AUROC = " + str(auc) + "\n")
     f.write("--------------------------------" + "\n")
 
-path = r"Data/JDT_R3_1.csv"
+path = r"../Data/JDT_R2_1.csv"
 data = pd.read_csv(path, index_col=None, header=0)
 
 X = data.loc[:, "SLOC_P":"MOD"]
@@ -63,16 +63,16 @@ v_f1 = metrics.f1_score(y_test, y_predicted)
 v_accuracy = metrics.accuracy_score(y_test, y_predicted)
 v_auc = metrics.roc_auc_score(y_test, y_predicted)
 
-d_f1 = abs(v_f1 - F1)
-d_accuracy = abs(v_accuracy - ACCURACY)
-d_auc = abs(v_auc - AUC)
+d_f1 = v_f1 - F1
+d_accuracy = v_accuracy - ACCURACY
+d_auc = v_auc - AUC
 
 
 printValues(v_f1, v_auc, v_accuracy, "VALIDATION SET")
 printValues(F1, AUC, ACCURACY, "TEST SET")
 printValues(d_f1, d_auc, d_accuracy, "DELTAS")
 
-file = open(sys.argv[1][:-3]+"-"+path[5:-4]+".txt", 'w')
+file = open(sys.argv[1][:-3]+"-"+path[8:-4]+".txt", 'w')
 fprintValues(v_f1, v_auc, v_accuracy, "VALIDATION SET", sys.argv[1], path, file)
 fprintValues(F1, AUC, ACCURACY, "TEST SET", sys.argv[1], path, file)
 fprintValues(d_f1, d_auc, d_accuracy, "DELTAS", sys.argv[1], path, file)

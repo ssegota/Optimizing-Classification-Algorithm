@@ -12,8 +12,8 @@ import uuid
 
 POPULATION_SIZE = 100
 ITERATIONS = 200
-PATH = r"Data/JDT_R2_0.csv"
-
+#PATH = r"Data/JDT_R2_0.csv"
+PATH = input("Path to data set:")
 NOTE = "Fitness used: $\sqrt{\\frac{F_1 ^ 2 + S_{AUROC} ^ 2 + Accuracy ^ 2}{3}}$"
 print(NOTE+"\n")
 
@@ -152,7 +152,7 @@ plt.ylabel("Fitness")
 plt.legend(loc=0)
 
 # Put a legend to the right of the current axis
-plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+#plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 plt.savefig("results-"+filename+"-"+PATH[5:-4]+".png")
 plt.show()
 
