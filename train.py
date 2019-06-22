@@ -12,7 +12,9 @@ import uuid
 
 POPULATION_SIZE = 100
 ITERATIONS = 200
+CONVERGE_CHECK = 50
 #PATH = r"Data/JDT_R2_0.csv"
+#PATH = r"Data/PDE_R3_2.csv"
 PATH = input("Path to data set:")
 NOTE = "Fitness used: $\sqrt{\\frac{F_1 ^ 2 + S_{AUROC} ^ 2 + Accuracy ^ 2}{3}}$"
 print(NOTE+"\n")
@@ -32,7 +34,7 @@ dataSets = glob.glob(os.PATH.join(PATH, "*.csv"))
 data = pd.concat((pd.read_csv(d, index_col=None, header=0)
                 for d in dataSets), axis=0, ignore_index=True)
 """
-X = data.loc[:, "SLOC_P":"MOD"]
+X = data.loc[:, "LOC":"MOD"]
 y = data['bug_cnt']
 
 binarize(y)
@@ -52,6 +54,14 @@ fit_f1 = []
 fit_auc = []
 
 for n in range(ITERATIONS):
+    if n > CONVERGE_CHECK:
+        s = np.sum(fit[-CONVERGE_CHECK:])
+        average = s/CONVERGE_CHECK
+        #print("Average=", s, " last = ", fit[n-1], end="\r")
+        if average == fit[n-1]:
+            print("------------------\n ALGORITHM CONVERGED AFTER", n, "ITERATIONS\n------------------\n")
+            break;
+        
     print("------------------\nITERATION =", n+1,"/",ITERATIONS, "\n------------------\n")
     l=0
     for i in range(POPULATION_SIZE):
@@ -77,7 +87,7 @@ for n in range(ITERATIONS):
         #population[i].fitness = population[i].auc
         #population[i].fitness = population[i].f1
         #population[i].fitness = population[i].accuracy
-        population[i].fitness = np.sqrt(np.square(population[i].auc)+np.square(population[i].f1)+np.square(population[i].accuracy))/np.sqrt(3)
+        population[i].fitness = (population[i].auc+population[i].f1+population[i].accuracy)/3.0
         ########################################################
 
         print((int((l/POPULATION_SIZE)*100)), "% :", "|",
@@ -136,20 +146,22 @@ population[0].fprintAll(file)
 file.write("DELTA = " + str(delta))
 
 plt.figure()
-plt.title("Score changes on dataset " + PATH[5:-4] + "\nIterations: "  \
-            + str(ITERATIONS) + " Population: " + str(POPULATION_SIZE) \
-            + " Mutation: " + '{0:1f}'.format(1/MUTATION_CHANCE*100) + "%" \
-            + "\n" + NOTE)
-plt.plot(np.arange(len(fit_f1)), fit_f1, label='F1')
-plt.plot(np.arange(len(fit_accuracy)), fit_accuracy, label='Accuracy')
-plt.plot(np.arange(len(fit_auc)), fit_auc, label='AUROC')
+#plt.title("Score changes on dataset " + PATH[5:-4] + "\nIterations: "  \
+#            + str(ITERATIONS) + " Population: " + str(POPULATION_SIZE) \
+#            + " Mutation: " + '{0:1f}'.format(1/MUTATION_CHANCE*100) + "%" \
+#            + "\n" + NOTE)
+
+plt.title("Score changes on dataset " + PATH[5:-4])
+plt.plot(np.arange(len(fit_f1)), fit_f1, label='F1', color='k', linestyle="--")
+plt.plot(np.arange(len(fit_accuracy)), fit_accuracy, label='Accuracy', color='k', linestyle=":")
+plt.plot(np.arange(len(fit_auc)), fit_auc, label='AUROC', color='k', linestyle="-.")
 
 plt.plot(np.arange(len(fit)), fit,
-         label="$\sqrt{\\frac{F_1 ^ 2 + S_{AUROC} ^ 2 + Accuracy ^ 2}{3}}$")
+         label="$\sqrt{\\frac{F_1 ^ 2 + S_{AUROC} ^ 2 + Accuracy ^ 2}{3}}$", color='k', linestyle="-")
 
 plt.xlabel("Generation")
 plt.ylabel("Fitness")
-plt.legend(loc=0)
+plt.legend(loc='lower left')
 
 # Put a legend to the right of the current axis
 #plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
